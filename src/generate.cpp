@@ -80,8 +80,8 @@ void erfc_complex(double x, double y, double& re, double& im)
 
 void Generator::loadSETables(const char* filename)
 {
- NT = 151;
- Nnb = 100;
+ NT = 151;//NT = 51; //NT = 151; 251;
+ Nnb = 100;//Nnb = 51;//Nnb = 100;
  S.resize(NT, vector<double> (Nnb));
  Vn.resize(NT, vector<double> (Nnb));
  Vp.resize(NT, vector<double> (Nnb));
@@ -118,13 +118,13 @@ void Generator::deltaE(double T, double nb, int type, double& Sout, double& Vout
 // ref: Niels-Uwe, private communication
 {
  const double lnC = log(1.e-3);
- const double lnM = log(pow(2./1e-3, 1./100.));
+ const double lnM = log(pow(2./1e-3, 1./100.)); //const double lnM = log(pow(2./1e-3, 1./51.));
  const int Np [4] = {1, 1, 2, 2};
  const int Nn [4] = {1, 2, 1, 2};
  T = max(T, Tmin);
  T = min(T, Tmax-1e-5);
  nb = max(nb, 0.001);
- nb = min(nb, 1.853615);
+ nb = min(nb, 1.853615);//min(nb, 0.302064); //nb = min(nb, 0.3);//nb = min(nb, 1.853615);
  double posT = (T-Tmin)/dT; // exact point in the temp grid
  int iT = (int)(posT); // nearest tab point from the left
  double posnb = (log(nb)-lnC)/lnM;
@@ -133,14 +133,132 @@ void Generator::deltaE(double T, double nb, int type, double& Sout, double& Vout
  double wT [2] = {1. - posT + iT, posT - iT};
  double wnb [2] = {1. - posnb + inb, posnb - inb};
  Sout = 0.;  Vout = 0.;
- for(int i=0; i<2; i++)
- for(int j=0; j<2; j++) {
-  Sout += wT[i] * wnb[j] * S[iT+i][inb + j];
-  Vout += wT[i] * wnb[j] * (Nn[type] * Vn[iT+i][inb + j] + Np[type] * Vp[iT+i][inb + j]);
- }
+	for(int i=0; i<2; i++)
+	for(int j=0; j<2; j++) {
+	if(((iT+i)<NT)&&((inb + j)<Nnb)){
+		Sout += wT[i] * wnb[j] * S[iT+i][inb + j];
+		Vout += wT[i] * wnb[j] * (Nn[type] * Vn[iT+i][inb + j] + Np[type] * Vp[iT+i][inb + j]);
+	}
+	else{  
+		cout << "WARNING! Arrays S,V are overfull!"<< endl;
+		Sout += wT[i] * wnb[j] * S[NT][Nnb];
+		Vout += wT[i] * wnb[j] * (Nn[type] * Vn[NT][Nnb] + Np[type] * Vp[NT][Nnb]);
+		}
+	}
  Sout *= 1e-3; // MeV -> GeV
  Vout *= 1e-3; // MeV -> GeV
 }
+
+
+/*
+void Generator::deltaE(double T, double nB, int type, double& Sout, double& Vout)
+//Formulas from: https://arxiv.org/pdf/1411.4593.pdf Appendix C
+
+{	//sijk[j][k][i], j = 0, 1, 2; k = 0, 2, 4; i = 1, 2, 3, 4, 5; 
+					
+	// type: 0 = deuterium, 1 = tritium, 2 = helium-3, 3 = alpha
+		//cout << "initial T = " << T << endl;
+			T = T*1000.; // converting T to MeV
+			double Tcalc=T; 		
+			double T0= 400.; //in MeV
+			T=0.0;
+			
+			double delta=0.2; // (Au,Pb)
+			
+			const int Np [4] = {1, 1, 2, 2};
+			const int Nn [4] = {1, 2, 1, 2};
+			
+	double sijk[3][3][5] = 
+	{{{4462.35,204334,125513,49.0026,241.935},
+		{1.63811,-11043.9,-64680.5,-1.76282,-19.8568},
+		{0.293287,-46439.7,-4940.76,-10.6072,-48.3232}},
+		{{-7.22458,7293.23,1055.3,1.70156,6.6665},
+			{0.92618,-49220.9,-19422.6,-11.1142,-52.6306},
+			{-0.679133,35263,15842.8,7.92604,38.1023}},
+				{{0.00975576,-209.452,132.502,-0.0456724,-0.112997},
+				{-0.0355021,2114.07,572.292,0.473553,2.15092},
+				{0.026292,-1507.55,-555.762,-0.337016,-1.57597}}};
+			
+	double vijk[3][5][5] = {{{3403.94,-345.863,33553.8,2.7078,18.7473},
+		{-490.15,1521.62,4298.76,-0.162553,4.0948364},
+		{-0.0213143,-2658.72,3692.23,-0.308454,-0.0308012},
+		{0.00760759,-408.013,-1083.14,-0.174442,-0.751981},
+		{0.0265109,-132.384,-728.086,-0.0581052,-0.585746}},
+		{{-0.000978098,29.309,-192.395,0.0161456,-0.102959},
+			{-0.000142646,-8.80748,-52.0101,-0.00145171,-0.044524},
+			{0.00176929,-236.029,-141.702,-0.0689643,-0.308021},
+			{0.00043752,13.7447,-57.9237,-0.0000398794,-0.0190921},
+			{-0.00321724,111.538,-11.4749,0.0317996,0.0869529}},
+			{{0.0000651609,3.63322,15.2158,0.00105179,0.0118049},
+				{0.0000098168,0.0163495,3.86652,0.000192765,0.0021141},
+				{-0.0000394036,6.88256,-0.785201,0.00203728,0.0070548},
+				{0.0000381407,-0.369704,1.59625,0.00000561467,0.000565564},
+				{0.000110931,-3.28749,2.0419,-0.000932046,-0.00182714}}};
+			
+			
+	//for (int i=0; i<5; i++){
+    //for (int j=0; j<3; j++){ 
+	//for (int k=0; k<3; k++){ 
+	//cout << "sijk =" << sijk[j][k][i] << endl;
+	//}}}
+
+	
+	double sij[3][5];
+	double vijP[3][5];
+	double vijN[3][5];
+	for (int i=0; i<5; i++){
+    for (int j=0; j<3; j++){ 
+		sij[j][i] = sijk[j][0][i]+sijk[j][1][i]*pow(delta,2)+sijk[j][2][i]*pow(delta,4);
+		vijP[j][i] = vijk[j][0][i]+vijk[j][1][i]*delta+vijk[j][2][i]*pow(delta,2)+vijk[j][3][i]*pow(delta,3)+vijk[j][4][i]*pow(delta,4);
+		vijN[j][i] = vijk[j][0][i]+vijk[j][1][i]*(-delta)+vijk[j][2][i]*pow((-delta),2)+vijk[j][3][i]*pow((-delta),3)+vijk[j][4][i]*pow((-delta),4);
+	}}
+	
+	//cout << "delta = " << delta<< endl;
+	//for (int i=0; i<5; i++){
+    //for (int j=0; j<3; j++){ 
+	//cout << "sij =" << sij[j][i] << endl;
+	//}}
+	
+	double si[5];
+	double viP[5];
+	double viN[5];
+	for (int i=0; i<5; i++){
+		si[i] = sij[0][i]+sij[1][i]*T+sij[2][i]*T*T;
+		viP[i] = vijP[0][i]+vijP[1][i]*T+vijP[2][i]*T*T;
+		viN[i] = vijN[0][i]+vijN[1][i]*T+vijN[2][i]*T*T;
+	}
+	//cout << "si[0] =" << si[0] << endl;
+	//cout << "si[1] =" << si[1] << endl;
+	//cout << "si[2] =" << si[2] << endl;
+	//cout << "si[3] =" << si[3] << endl;
+	//cout << "si[4] =" << si[4] << endl;
+	
+	
+	Sout = (si[0]*nB+si[1]*nB*nB+si[2]*nB*nB*nB)/(1.+si[3]*nB+si[4]*nB*nB); //calculated at T=0 !
+	
+	double VP = (viP[0]*nB+viP[1]*nB*nB+viP[2]*nB*nB*nB)/(1.+viP[3]*nB+viP[4]*nB*nB);  //calculated at T=0 !
+	double VN = (viN[0]*nB+viN[1]*nB*nB+viN[2]*nB*nB*nB)/(1.+viN[3]*nB+viN[4]*nB*nB);	 //calculated at T=0 !
+	
+	Vout = Nn[type] * VN + Np[type] * VP;  //calculated at T=0 !
+	
+	//cout << "Tcalc = " << Tcalc << ", Sout (ini)  = "<< Sout << ", Vout (ini)  = "<< Vout << " type = "<< type << endl;
+	
+	double func = 1./(1.+(Tcalc/T0)*(Tcalc/T0)); // magic function
+	
+	Sout = Sout*func; // we calculate them at another T (as in current droplet)
+	Vout = Vout*func;
+	
+	
+	
+	//cout << "Tcalc = " << Tcalc << ", Sout  = "<< Sout << ", Vout  = "<< Vout << " type = "<< type << endl;
+							
+	//cout << " sijk[0][0][0] = " << sijk[0][0][0]<< endl; 
+	//cout << " sijk[2][2][2] = " << sijk[2][2][2]<< endl;
+	//cout << " sijk[2][2][4] = " << sijk[2][2][4] << endl;
+	Sout *= 1e-3; // MeV -> GeV
+	Vout *= 1e-3; // MeV -> GeV
+}
+*/
 
 double Generator::dEPauli(double p, double T, double nb, int type)
 {
@@ -178,8 +296,9 @@ double Generator::dEPauli(double p, double T, double nb, int type)
    4.*pow(f4[type]/f3[type], 2)*(1.+T/f2[type])+unu[type]*nb)))*
    2.*f4[type]*hbarC/((p+1e-15)*sqrt(T))*
    exp(A*(1.-B*B))*(sin(-2.*A*B)*erfc_re + cos(-2.*A*B)*erfc_im);
- // we assumy that asymmetry Y=0, therefore:
- double ynu [4] = {1.,  2./3.,  4./3., 1.};
+ // assuming that asymmetry Y=0, therefore: double ynu [4] = {1.,  2./3.,  4./3., 1.};
+ //Yp=0.4 (Au, Pb):
+ double ynu [4] = {1., 1.06667, 0.933333, 1.};
  return cnu * (1. - exp(-fnu/cnu*ynu[type]*nb - dnu*nb*nb)) * 0.001; //  [GeV]
 }
 
@@ -238,39 +357,65 @@ void Generator::density_particles(double T, double muB, double muS, double& tota
 	} // ip
 }
 
-void Generator::density_clusters(double T, double muB,  double muS, double& total_densityClust, double& total_nBClust,
+void Generator::density_clusters(double T, double muB,  double muS, double nBiel, double& total_densityClust, double& total_nBClust, double& total_nSClust,
  std::vector<double>&cumulantDensityClust)
 {   total_densityClust = 0 ;
     total_nBClust = 0 ;
-
+    total_nSClust = 0 ;
+	
+	ofstream fSE ("self_energies");
+	//const int nClustSpec = 4 ;
+	//const int typesClust [nClustSpec] = {0, 1, 2, 3};
+	int typeClust;
+	// type: 0 = deuterium, 1 = tritium, 2 = helium-3, 3 = alpha - for SE corrections
+	
 	const int NPARTall = database->GetNParticles(true) ;
 	cumulantDensityClust.clear();
-	cumulantDensityClust.reserve(38);
+	cumulantDensityClust.reserve(42);
 	int ipclust = 0;
+
 	for(int ip=0; ip<NPARTall; ip++){
 		ParticlePDG2 *particle = database->GetPDGParticleByIndex(ip) ;
 		int ID = particle->GetPDG() ;
 		if(abs(ID)>1000000000){
 		double densityClust = 0.;
 		double nBClust = 0.;
-		const double mass = particle->GetMass();
+		double nSClust = 0.;
+		//Self-energy corrections:
+		double ScalarSE=0.0, VectorSE=0.0, dEPauliClust=0.0;
+		if(bSelfEnergy) {
+			if(ID ==1000010200){typeClust = 0;}
+			else if (ID ==1000010300){typeClust = 1;} 
+			else if (ID ==1000020300){typeClust = 2;}
+			else if (ID >=1000020400){typeClust = 3;}
+			deltaE(T, nBiel, typeClust, ScalarSE, VectorSE);
+			dEPauliClust = dEPauli(0, T, nBiel, typeClust); //p=0
+			//fSE <<" ID = "<< ID << "  " << T << " " << nBiel << " ScalarSE = " << ScalarSE << " VectorSE = " << VectorSE << " _dEPauli = " << _dEPauli << endl;
+		}
+		//if(T>0.250){ScalarSE=0.; VectorSE=0.; /*cout << "T>50MeV" << T << endl;*/} 
+		//if(T>=0.0){deltaE(0, nBiel, typeClust, ScalarSE, VectorSE); /*cout << "T>50MeV" << T << endl;*/} 
+		
+		const double mass = particle->GetMass()-ScalarSE;
 		const double B = particle->GetBaryonNumber();
 		const double S = particle->GetStrangeness();
 		const double J = particle->GetSpin();
 		//char* Name = particle->GetName() ;
-		double muf = B*muB + S*muS; // and NO electric chem.pot.
+		double muf = B*muB + S*muS-VectorSE-dEPauliClust; // and NO electric chem.pot.
+		//cout <<"ScalarSE = " << ScalarSE <<" VectorSE = " <<VectorSE << " dEPauliClust = "<<dEPauliClust <<" muf = " << muf<< endl;
 		if(muf-mass > -muMassLim) muf = mass-muMassLim;
 		double z=mass/T;
 		double lambdaC = exp(muf/T-z);
 		double fz = sqrt(TMath::Pi()/(2*z))*(1+15/(8*z)+105/(128*z*z)-315/(1024*z*z*z)) ;
         densityClust = (2.*J+1.)*T*T*T*pow(gevtofm,3)/(2.*pow(TMath::Pi(),2))*z*z*fz * lambdaC ; //only first term in series
 		nBClust = B*densityClust;
+		nSClust = S*densityClust;
 		
 		if(ipclust>0) cumulantDensityClust[ipclust] = cumulantDensityClust[ipclust-1] + densityClust ;
         else cumulantDensityClust[ipclust] = densityClust;
         ipclust++;
 		total_densityClust += densityClust ;
 		total_nBClust += nBClust ;
+		total_nSClust += nSClust ;
 		} //if
 		}	// ip clusters
 }
@@ -315,18 +460,32 @@ double Generator::energy_particles(double T, double muB, double muS)
 	return Epsilon ;
 }
 
-double Generator::energy_clusters(double T, double muB, double muS)
+double Generator::energy_clusters(double T, double muB, double muS, double nBiel)
 { 	double Epsilon = 0;
 	const int NPARTall = database->GetNParticles(true) ;
 	for(int ip=0; ip<NPARTall; ip++){
 		ParticlePDG2 *particle = database->GetPDGParticleByIndex(ip) ;
 		int ID = particle->GetPDG() ;
-		if(abs(ID)>1000000000){
-		const double mass = particle->GetMass();
+		
+		int typeClust;
+		// type: 0 = deuterium, 1 = tritium, 2 = helium-3, 3 = alpha - for SE corrections
+		
+		if(abs(ID)>1000000000){		
+		double ScalarSE=0.0, VectorSE=0.0, dEPauliClust=0.0;
+		if(bSelfEnergy) {
+			if(ID ==1000010200){typeClust = 0;}
+			else if (ID ==1000010300){typeClust = 1;}
+			else if (ID ==1000020300){typeClust = 2;}
+			else if (ID >=1000020400){typeClust = 3;}
+			deltaE(T, nBiel, typeClust, ScalarSE, VectorSE);
+			dEPauliClust = dEPauli(0, T, nBiel, typeClust); //p=0
+			//fSE <<" ID = "<< ID << "  " << T << " " << nBiel << " ScalarSE = " << ScalarSE << " VectorSE = " << VectorSE << " _dEPauli = " << _dEPauli << endl;
+		}	
+		const double mass = particle->GetMass()-ScalarSE;
 		const double B = particle->GetBaryonNumber();
 		const double S = particle->GetStrangeness();
 		const double J = particle->GetSpin();
-		double muf = B*muB + S*muS;
+		double muf = B*muB + S*muS-VectorSE-dEPauliClust;
 		if(muf-mass > -muMassLim) muf = mass-muMassLim;
 		double z=mass/T;
 		double lambdaC = exp(muf/T-z);
@@ -378,15 +537,15 @@ void Generator::generate(Surface *su)
  int nmaxiter = 0 ;
  int ntherm_fail=0 ;
  const int NPARTall = database->GetNParticles(true) ;
-	int pidClust[38];
+	int pidClust[42];
 	int ipclust = 0;
+	
 	for(int ip=0; ip<NPARTall; ip++){
 		ParticlePDG2 *particle = database->GetPDGParticleByIndex(ip) ;
 		int ID = particle->GetPDG() ;
 		if(abs(ID)>1000000000){
 			pidClust[ipclust] = ID; ipclust++; }
 	}
- ofstream fSE ("self_energies");
  
  double EnergySumInit = 0.;
  double EnergySumFinal = 0.;
@@ -395,11 +554,19 @@ void Generator::generate(Surface *su)
  double SSumInit = 0.;
  double SSumFinal = 0.;
  
+ //double BSumFinalHadr = 0.;
+ //double BSumFinalClust = 0.;
+ 
  // first baryon-rich fluids
  for(int iel=0; iel<su->getN(); iel++){ 
  // ---> thermal densities, for each surface element
 	double T = su->getTemp(iel);
 	double muB = su->getMuB(iel);
+	
+	//if((su->getNb(iel)>0.2) || (T>0.150)){cout << "Warning! nB>0.2 1/fm^-3 or T>150 MeV" << endl;
+	//cout << iel << " T = " << T << " nB = "<< su->getNb(iel)<< endl;}
+	
+	
 	//dvEff = dsigma_mu * u^mu
 	double dvEff = su->getVol(iel) ; //fm^3
 	ParticlePDG2 *nucleonN = database->GetPDGParticle(2112);
@@ -419,6 +586,7 @@ void Generator::generate(Surface *su)
 
 	//----- muB recalculation ---------------
 	double muB_new;
+	
 	if(muB > 0){
 		double lambdaNprime_k, lambdaNprime_k_1 ;
 		double muB_k, muB_k_1 ;
@@ -431,21 +599,21 @@ void Generator::generate(Surface *su)
 			k++; // iteration
 			lambdaNprime_k_1 = lambdaNprime_k;
 			muB_k_1 = massN + T * log(lambdaNprime_k_1);
-			double totalDensity_k_1, Sum_nB_k_1, Sum_nS_k_1, totalDensityC_k_1, Sum_nBC_k_1; 
+			double totalDensity_k_1, Sum_nB_k_1, Sum_nS_k_1, totalDensityC_k_1, Sum_nBC_k_1, Sum_nSC_k_1; 
 			std::vector<double> cumulantDensity_k_1;
 			std::vector<double> cumulantDensityC_k_1;
 			density_particles(T, muB_k_1, su->getMuS(iel), totalDensity_k_1, Sum_nB_k_1, Sum_nS_k_1, cumulantDensity_k_1) ;
-			density_clusters(T, muB_k_1, su->getMuS(iel), totalDensityC_k_1, Sum_nBC_k_1, cumulantDensityC_k_1) ;
+			density_clusters(T, muB_k_1, su->getMuS(iel), su->getNb(iel), totalDensityC_k_1, Sum_nBC_k_1, Sum_nSC_k_1, cumulantDensityC_k_1) ;
 			
 			lambdaNprime_k = total_nB/((Sum_nB_k_1 + Sum_nBC_k_1)/lambdaNprime_k_1) ; // recalculation of lambda
 			muB_k = massN + T * log(lambdaNprime_k);
 			
 			if(k>50){ muB_k = (muB_k + muB_k_1)/2 ; lambdaNprime_k = exp((muB_k-massN)/T) ; } // relaxation of iterations
-			double totalDensity_k, Sum_nB_k, Sum_nS_k, totalDensityC_k, Sum_nBC_k; 
+			double totalDensity_k, Sum_nB_k, Sum_nS_k, totalDensityC_k, Sum_nBC_k, Sum_nSC_k; 
 			std::vector<double> cumulantDensity_k;
 			std::vector<double> cumulantDensityC_k;
 			density_particles(T, muB_k, su->getMuS(iel), totalDensity_k, Sum_nB_k, Sum_nS_k, cumulantDensity_k) ;
-			density_clusters(T, muB_k, su->getMuS(iel), totalDensityC_k, Sum_nBC_k, cumulantDensityC_k) ;
+			density_clusters(T, muB_k, su->getMuS(iel), su->getNb(iel), totalDensityC_k, Sum_nBC_k, Sum_nSC_k, cumulantDensityC_k) ;
 			
 			double total_nB_k = Sum_nB_k + Sum_nBC_k ; 
 			epsilon = abs((total_nB_k - total_nB)/total_nB);	// criterion
@@ -454,16 +622,21 @@ void Generator::generate(Surface *su)
 		if(muB_new < 0.006){muB_new = muB;}	
 	}//muB>0
 	else{muB_new = muB;}
+	
+    //muB_new = muB; //for no recalc. muB
     
-	double totalDensity_new, Sum_nB_new, totalDensityClust_new, Sum_nBC_new;
+	double totalDensity_new, Sum_nB_new, totalDensityClust_new, Sum_nBC_new, Sum_nSC_new;
 	double Sum_nS_new = 0.;
 	std::vector<double> cumulantDensity_new;
 	std::vector<double> cumulantDensityClust_new;
 	density_particles(T, muB_new, su->getMuS(iel), totalDensity_new, Sum_nB_new, Sum_nS_new, cumulantDensity_new) ;
-	density_clusters(T, muB_new, su->getMuS(iel), totalDensityClust_new, Sum_nBC_new, cumulantDensityClust_new) ;
+	density_clusters(T, muB_new, su->getMuS(iel), su->getNb(iel), totalDensityClust_new, Sum_nBC_new, Sum_nSC_new, cumulantDensityClust_new) ;
+	
+	//BSumFinalHadr += 2*(Sum_nB_new) * dvEff; // new nB of all system
+	//BSumFinalClust += 2*(Sum_nBC_new) * dvEff; // new nB of all system
 	BSumFinal += 2*(Sum_nB_new + Sum_nBC_new) * dvEff; // new nB of all system
-	SSumFinal += 2*Sum_nS_new * dvEff; // new nS of all system
-	EnergySumFinal += 2*(energy_particles(T, muB_new, su->getMuS(iel)) + energy_clusters(T, muB_new, su->getMuS(iel)) ) * dvEff;
+	SSumFinal += 2*(Sum_nS_new + Sum_nSC_new) * dvEff; // new nS of all system
+	EnergySumFinal += 2*(energy_particles(T, muB_new, su->getMuS(iel)) + energy_clusters(T, muB_new, su->getMuS(iel), su->getNb(iel)) ) * dvEff;
 // ---< end thermal densities calculation
  
 	////// EVENTS //////
@@ -549,6 +722,7 @@ void Generator::generate(Surface *su)
      acceptParticle(ievent,pp2);
    } // accepted according to the weight
   } // we generate a cluster
+  
   } // events loop
   
   
@@ -560,6 +734,8 @@ void Generator::generate(Surface *su)
  cout << "EnergySumFinal = "<< EnergySumFinal << " GeV" << endl;
  cout << "BSumInit = "<< BSumInit << endl;
  cout << "BSumFinal = "<< BSumFinal << endl;
+ //cout << "BSumFinalHadr = "<< BSumFinalHadr << endl;
+ //cout << "BSumFinalClust = "<< BSumFinalClust << endl;
  cout << "SSumInit = "<< SSumInit << endl;
  cout << "SSumFinal = "<< SSumFinal << endl;
  cout << "therm_failed elements: " <<ntherm_fail << endl ;

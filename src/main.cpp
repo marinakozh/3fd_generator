@@ -86,12 +86,16 @@ int main(int argc, char **argv) {
  if(selfEnergy) cout << "!! SELF-ENERGIES ON\n";
  gen->selfEnergyOn(selfEnergy);
  gen->loadSETables("tab/SE_04.dat");
+ //gen->loadSETables("tab/SE_MK_func.dat");
+ //gen->loadSETables("tab/SE_MK_func400.dat");
+ //gen->loadSETables("tab/SE_MK_exp600.dat");
 
  gen->generate2surf(&surf1, &surf2, nevents);
  gen->rescatterDecay(decayK0);
  gen->recalculationNPandTHe3(&surf1);
  gen->fillTree();
  file.Write("",TObject::kOverwrite);
+ //cout << "file now written!" << endl;
  file.Close();
  //---- cleanup
  delete rnd;

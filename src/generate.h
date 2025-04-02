@@ -50,10 +50,9 @@ public:
 
 void density_particles(double T, double muB, double muS, double& total_density, double& total_nB, double& total_nS, 
 std::vector<double>&cumulantDensity);
-void density_clusters(double T, double muB, double muS, double& total_densityClust, double& total_nBClust,
-std::vector<double>&cumulantDensityClust);
+void density_clusters(double T, double muB, double muS, double nBiel, double& total_densityClust, double& total_nBClust, double& total_nSClust, std::vector<double>&cumulantDensityClust);
 double energy_particles(double T, double muB, double muS);
-double energy_clusters(double T, double muB, double muS);
+double energy_clusters(double T, double muB, double muS, double nBiel);
 };
 
 void erfc_complex(double x, double y, double& re, double& im);

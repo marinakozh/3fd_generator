@@ -80,3 +80,5 @@
 3.75704E+03     4.89            0	X	0       -	X	F	1000020413    ++	S	Helium4(0-c)    uuduududdudd  
 3.75707E+03     3.78            0	X	2       +	X	F	1000020414    ++	S	Helium4(2+b)    uuduududdudd
 3.75829E+03     9.72            0	X	2       +	X	F	1000020415    ++	S	Helium4(2+c)    uuduududdudd 
+2.994E+03		-1				0	X	0.5		+	X	F	1010010030	   +	S	HyperTritium	uududduds
+3.933E+03		-1				0.5	X	0		+	X	F	1010020040	  ++	S	HyperHelium4	uuduududduds

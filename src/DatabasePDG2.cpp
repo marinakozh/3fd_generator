@@ -822,4 +822,3 @@ void DatabasePDG2::SortDecayingResonances() {
     SortParticles();
     return;
 };
-
