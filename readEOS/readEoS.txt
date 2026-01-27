@@ -1,0 +1,153 @@
+EoS data for using in hydrodynamic codes
+(for crossover and 1-order PT EoS's)
+
+
+
+In all programs, the energy density and pressure are always used in units (n0*mN).
+Here, mN is the nucleon mass (mN=938.9MeV),
+n0 is the normal nuclear density, n0=0.15fm-3.
+
+
+The energy density and pressure are represented as a sum of compressional energy density (pressure) and thermal ones: 
+
+e(n,T) = e(n,T=0) + eT(n,T) 
+P(n,T) = P(n,T=0) + PT(n,T)
+
+The following data tables should be prepared:
+
+
+1. Compressional energy density ec and pressure Pc are tabulated in the range
+[xmin,xmax], x=n/n0, at the points:
+ xj=xmin+(xmax-xmin)*(j-1)/(Nx0-1), j=1,2,...,Nx0
+ xmax/(Nx0-1)=0.1,
+ Xmin0  = 0.01.
+
+Compressional energy density and pressure are stored in arrays ecmp(j), pcmp(j), j=1,...,Nx0.
+
+
+2. Thermal energy density eT(T,n) and pressure PT(T,n) are calculated on grid [Ti,xj], where xj is defined above, and the temperature (in MeV) Ti=Tmax*(i-1)/(Nt0-1), i=1,2,...,Nt0.
+Tmax/(Nt0-1)=1 MeV
+
+
+
+Thermal energy density and pressure are stored in arrays enth(i,j), prth(i,j): 
+the first index corresponds to the temperature, and the second one, to the baryon density. 
+
+Arrays ecmp(j), pcmp(j), enth(i,j), prth(i,j) are stored in the file in the following format (FORTRAN notation):
+*-------------------------------------
+      character*50 fname
+	  ...
+      open (unit=nunit,status='old',file=fname)
+      read(nunit,*)(ecmp(j),j=1,Nx0)
+      read(nunit,*)(pcmp(j),j=1,Nx0)
+      do i=1,Nt0
+       read(nunit,*)(enth(i,j),j=1,Nx0)
+      enddo
+      do i=1,Nt0
+       read(nunit,*)(prth(i,j),j=1,Nx0)
+      enddo
+      close (nunit)
+*-------------------------------------
+These arrays with Tmax=800MeV and xmax=60 are stored in the files for 1PT EoS and crossover EoS, respectively,
+$HOME/NFD/rhiclib/EoS/2phaseEoS/enpr800x60.dat,
+$HOME/NFD/rhiclib/EoS/mixEoS/enpr800x60.dat.
+
+
+
+3. Thermal energy density and pressure of baryon-free matter (i.e. at n=0) are stored in the arrays yth(i), pth(i), i=2,...,Nt0. 
+They are storred in file in the following format (FORTRAN notation):
+*---------------------------------
+      character*50 fnameb0
+	  ...
+      open (unit=nunit,status='old',file=fnameb0)
+      read(nunit,*)(yth(i),i=2,Nt0)
+      read(nunit,*)(pth(i),i=2,Nt0)
+      close (nunit)
+*---------------------------------
+These arrays with Tmax=800MeV are stored in the files for 1PT EoS and crossover EoS, respectively,
+$HOME/NFD/rhiclib/EoS/2phaseEoS/epn800b0.dat,
+$HOME/NFD/rhiclib/EoS/mixEoS/epn800b0.dat.
+
+
+
+4. Fraction of QGP (valued from 0 to 1) is stored in the arrays wpl0(i) and wpl(i,j) for baryon-free matter (nB=0) and baryon-rich matter, respectively. 
+They are storred in file in the following format (FORTRAN notation):
+*---------------------------------
+      character*50 wplname
+	  ...
+      open (unit=nunit,status='old',file=wplname)
+c     *      file='../EoS/2phaseEoS/wpl800x60.dat')
+       wpl0(1)=0.
+       read (nunit,*)(wpl0(i),i=2,Nt0)
+	 do i=1,Nt0
+	  read(nunit,*)(wpl(i,j),j=1,Nx0)
+       enddo
+	close (nunit)
+*---------------------------------
+These arrays are stored in the files for 1PT EoS and crossover EoS, respectively,
+$HOME/NFD/rhiclib/EoS/2phaseEoS/wpl800x60.dat,
+$HOME/NFD/rhiclib/EoS/mixEoS/wpl800x60.dat.
+
+
+
+
+5. Baryonic chemical potential muB [in MeV], calculated on the same [Ti,xj] gird, are stored in the array umbar(i,j). 
+Array umbar(i,j) is stored in separate file in the following format (FORTRAN notation):
+*---------------------------------
+     character*(*)  fumbar
+     ... 
+     open (unit=nunit,status='old',file=fumbar)
+     do i=1,Nt0
+       read(nunit,*)(umbar(i,j),j=1,Nx0)
+     enddo
+     close (unit=nunit)
+*---------------------------------
+These arrays with Tmax=800MeV and xmax=60 are stored in the files for 1PT EoS and crossover EoS, respectively,
+$HOME/NFD/rhiclib/EoS/2phaseEoS/800x60/umbar.dat,
+$HOME/NFD/rhiclib/EoS/mixEoS/800x60/umbar.dat.
+
+
+
+6. Strange chemical potential mus [in MeV], calculated on the same [Ti,xj] gird, is stored in the array umstr(i,j). 
+Array umstr(i,j) is stored in separate file umstr.dat in the following format (FORTRAN notation):
+*---------------------------------
+     character*(*)  fumstr
+     ... 
+     open (unit=nunit,status='old',file=fumstr)
+      do i=1,Nt0
+       read(nunit,*)(umstr(i,j),j=1,Nx0)
+      enddo
+     close (unit=nunit)
+*---------------------------------
+These arrays with Tmax=800MeV and xmax=60 are stored in the files for 1PT EoS and crossover EoS, respectively,
+$HOME/NFD/rhiclib/EoS/2phaseEoS/800x60/umstr.dat,
+$HOME/NFD/rhiclib/EoS/mixEoS/800x60/umstr.dat.
+
+
+
+7. In general case, it's assumed that nuclear matter consists of baryons, mesons, quark and gluons. 
+For each type of constituent particles, the scalar density and proper density (zero component of the current in the rest frame) 
+is tabulated on the same grid [Ti,xj] and stored in separate files. 
+The following correspondence of densities, arrays and files takes place: 
+array	         density	            file name
+srQrk(i,j)	scalar density of quarks	srQrk.dat
+srmes(i,j)	scalar density of mesons	srmes.dat
+srGlu(i,j)	scalar density of gluons	srGlu.dat
+srbar(i,j)	scalar density of baryons	srbar.dat
+rrQrk(i,j)	proper density of quarks	rrQrk.dat
+rrmes(i,j)	proper density of mesons	rrmes.dat
+rrGlu(i,j)	proper density of gluons	rrGlu.dat
+rrbar(i,j)	proper density of baryons	rrbar.dat
+
+All densities are  stored in files in units n0 (normal nuclear density) in the following format (FORTRAN notation, example for srmes):
+*---------------------------------
+     character*(*)  flsrmes
+     ... 
+     open (unit=nunit,status='old',file=flsrmes)
+      do i=1,Nt0
+       read(nunit,*)(srmes(i,j),j=1,Nx0)
+      enddo
+     close (unit=nunit)
+*---------------------------------
+All chemical potential and density files are located in one directory.
+

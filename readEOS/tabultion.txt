@@ -1,0 +1,136 @@
+EoS data for using in hydrodynamic codes
+
+
+
+In all programs, the energy density and pressure are always used in units (n0*mN).
+Here, mN is the nucleon mass (mN=938.9MeV),
+n0 is the normal nuclear density, n0=0.15fm-3.
+
+
+For tables, the energy density and pressure should be represented as a sum of compressional energy density (pressure) and thermal ones: 
+
+e(n,T) = e(n,T=0) + eT(n,T) 
+P(n,T) = P(n,T=0) + PT(n,T)
+
+The following data tables should be prepared:
+
+
+1. Compressional energy density ec and pressure Pc are tabulated in the range
+[xmin,xmax], x=n/n0, at the points:
+ xj=xmin+(xmax-xmin)*(j-1)/(Nx0-1), j=1,2,...,Nx0
+Program parameter Nx0 is defined in include file $HOME/NFD/incl/tabtpr0.inc.
+xmax is defined in input data files for hydrodynamical program as variable Xma.
+Resonable dimension of the grid Nx0 is determined from the relation xmax/(Nx0-1)=0.1.
+For the minimal baryon density insted of xmin=0, which is defined in input data files for hydrodynamical program as variable Xmi (normally =0) a certain small value is used, e.g. for GM EoS it equals 0.01. This parameter is defined in subroutine INITEMA (file $HOME/NFD/rhiclib/EoS/fort/initema.f, variable Xmin0 in common block common /vconst/t0,otb,Xmin0).
+
+Compressional energy density and pressure are stored in arrays ecmp(j), pcmp(j), j=1,...,Nx0.
+
+
+2. Thermal energy density eT(T,n) and pressure PT(T,n) are calculated on grid [Ti,xj], where xj is defined above, and the temperature (in MeV) Ti=Tmax*(i-1)/(Nt0-1), i=1,2,...,Nt0.
+
+Program parameter Nt0 is defined in include file $HOME/NFD/incl/tabtpr0.inc. Resonable dimension of the temperature grid Nt0 is determined from the relation Tmax/(Nt0-1)=1MeV. It's assumed, that minimal temperature on grid Ti is equal zero. In actual calculations of thermal energy and pressure instead of T0=0 a certain small value is used, e.g. in GM EoS T0=8MeV, which is defined in subroutine INITEMA (file $HOME/NFD/rhiclib/EoS/fort/initema.f, variables t0 in common block common /vconst/t0,otb,Xmin0). The minimal baryon density xmin is also defined in subroutine INITEMA (file $HOME/NFD/rhiclib/EoS/fort/initema.f, variable Xmin0 in common block common /vconst/t0,otb,Xmin0). Tmax is defined in input data files for hydrodynamical program as variable Tma.
+
+Thermal energy density and pressure are stored in arrays enth(i,j), prth(i,j): the first index corresponds to the temperature, and the second one, to the baryon density. 
+
+Arrays ecmp(j), pcmp(j), enth(i,j), prth(i,j) are stored in the file in the following format (FORTRAN notation):
+*-------------------------------------
+      character*50 fname
+	  ...
+      open (unit=nunit,status='old',file=fname)
+      write(nunit,*)(ecmp(j),j=1,Nx0)
+      write(nunit,*)(pcmp(j),j=1,Nx0)
+      do i=1,Nt0
+       write(nunit,*)(enth(i,j),j=1,Nx0)
+      enddo
+      do i=1,Nt0
+       write(nunit,*)(prth(i,j),j=1,Nx0)
+      enddo
+      close (nunit)
+*-------------------------------------
+We recommend to use value of xmax and Tmax in file name, e.g. these arrays with Tmax=800MeV and xmax=60 for Two phase EoS are stored in the file $HOME/NFD/rhiclib/EoS/2phaseEoS/enpr800x60.dat.
+The file name is used in hydrodynamical program (e.g. in RHIC3FV031) in variable tabeos2. See subroutine TABTPRE (file $HOME/NFD/rhiclib/EoS/fort/tabtpre.f), which reads these arrays from file for following usage in hydrodynamical programs.
+
+
+3. Thermal energy density and pressure of baryon-free matter (i.e. at n=0) are calculated separately and are stored in the arrays yth(i), pth(i), i=2,...,Nt0. They are written into file in the following format (FORTRAN notation):
+*---------------------------------
+      character*50 fnameb0
+	  ...
+      open (unit=nunit,status='old',file=fnameb0)
+      write(nunit,*)(yth(i),i=2,Nt0)
+      write(nunit,*)(pth(i),i=2,Nt0)
+      close (nunit)
+*---------------------------------
+We recommend to use value of Tmax in file name, e.g. these arrays with Tmax=800MeV for Two phase EoS are stored in the file $HOME/NFD/rhiclib/EoS/2phaseEoS/epn800b0.dat.
+The file name is used in hydrodynamical program (e.g. in RHIC3FV031) in variable tabbar0. See subroutine TABTPRE (file $HOME/NFD/rhiclib/EoS/fort/tabtpre.f), which reads these arrays from file for following usage in hydrodynamical programs.
+
+
+4. Baryonic chemical potential ?B [in MeV] is calculated on the same [Ti,xj] gird and stored into the array umbar(i,j). Array umbar(i,j) should be written into separate file in the following format (FORTRAN notation):
+*---------------------------------
+     character*(*)  flumbar
+     ... 
+     open (unit=nunit,status='old',file=flumbar)
+     do i=1,Nt0
+       write(nunit,*)(umbar(i,j),j=1,Nx0)
+     enddo
+     close (unit=nunit)
+*---------------------------------
+The name of the file is fixed in the hydrodynamical program as umbar.dat. The variable is directory, where the file is located. For instance, for Two phase EoS this file is located in $HOME/NFD/rhiclib/EoS/2phaseEoS/800x60/. Directory name is used in hydrodynamical programs (e.g. in RHIC3FV031) in variable densdir. See subroutine TABDENS (file $HOME/NFD/rhiclib/EoS/fort/tabdens.f), which reads this array from file for following usage in hydrodynamical programs.
+
+
+5. Strange chemical potential ?s [in MeV] is calculated on the same [Ti,xj] gird and stored into the array umstr(i,j). Array umstr(i,j) should be written into separate file umstr.dat in the following format (FORTRAN notation):
+*---------------------------------
+     character*(*)  flumstr
+     ... 
+     open (unit=nunit,status='old',file=flumstr)
+      do i=1,Nt0
+       write(nunit,*)(umstr(i,j),j=1,Nx0)
+      enddo
+     close (unit=nunit)
+*---------------------------------
+The name of the file is fixed in the hydrodynamical program as umstr.dat. The file is located in the same directory, as file umbar.dat (see previous item).
+
+6. In general case, it's assumed that nuclear matter consists of baryons, mesons, quark and gluons. For each type of constituent particles scalar density and zero component of vector density should be tabulated on the same grid [Ti,xj] and stored in separate files. The following correspondence of densities, arrays and files should be fulfilled
+array	density	file name
+srQrk(i,j)	scalar density of quarks	srQrk.dat
+srmes(i,j)	scalar density of mesons	srmes.dat
+srGlu(i,j)	scalar density of gluons	srGlu.dat
+srbar(i,j)	scalar density of baryons	srbar.dat
+rrQrk(i,j)	vector density of quarks	rrQrk.dat
+rrmes(i,j)	vector density of mesons	rrmes.dat
+rrGlu(i,j)	vector density of gluons	rrGlu.dat
+rrbar(i,j)	vector density of baryons	rrbar.dat
+
+Notes:
+Small and capital letters in file names are important in some operational systems.
+Don't use small leters instead of capital and vice versa!
+All densities are calculated and stored in files in units n0 (normal nuclear density).
+Each density file should be filled with corresponding array in the following format (FORTRAN notation, example for srmes):
+*---------------------------------
+     character*(*)  flsrmes
+     ... 
+     open (unit=nunit,status='old',file=flsrmes)
+      do i=1,Nt0
+       write(nunit,*)(srmes(i,j),j=1,Nx0)
+      enddo
+     close (unit=nunit)
+*---------------------------------
+All chemical potential and density files should be placed in one directory, name of which is used in variable densdir in program RHIC3FV031.
+These files are read by subroutine TABDENS (file $HOME/NFD/rhiclib/EoS/fort/tabdens.f).
+
+In hydrodynamical programs (e.g. in RHIC3FV031) the variable, which switches different EoS (besides different file names etc.), is ieos. The following values of ieos are reserved in hydrodynamical programs:
+Hadronic GM EoS with different parametrization on compressional energy (mean fields)
+
+
+in notation of paper Phys. Rev. C, 2006, v. 74, No. 3, 034904
+ieos=0 - hadronic gas EoS (without mean field interaction)
+ieos=-1 - intermediate (K=210MeV) hadronic GM EoS
+ieos=-2 - hard (K=380MeV) hadronic GM EoS
+ieos=-3 - soft (K=130MeV) hadronic GM EoS
+ieos=-4 - extra soft (K=100MeV) hadronic GM EoS
+ieos=-5 - ultra soft (K=90MeV) hadronic GM EoS
+EoS with Quark Gluon Plasma phase
+
+
+ieos=4 - two phase EoS (2P EoS)
+ieos=5 - free value, which may be used for any new EoS
+It's necessary to change source codes of programs to use any other value of ieos.
