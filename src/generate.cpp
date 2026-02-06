@@ -664,6 +664,8 @@ void Generator::generate(Surface *su)
    double weight = 1.0 ;
    if(part->GetBaryonNumber()==0 && part->GetStrangeness()==0)
     weight = su->getRpfl(iel) ;
+    
+   //generation of the particle parameters
    if(rnd->Rndm()<=weight){
    const double p = fthermal->GetRandom() ;
    const double phi = 2.0*TMath::Pi()*rnd->Rndm() ;
@@ -671,14 +673,28 @@ void Generator::generate(Surface *su)
    mom.SetPxPyPzE(p*sqrt(1.0-sinth*sinth)*cos(phi),
      p*sqrt(1.0-sinth*sinth)*sin(phi), p*sinth, sqrt(p*p+mass*mass) ) ;
    mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
-   Particle *pp = new Particle( su->getX(iel), su->getY(iel), su->getZ(iel),
+   Particle *pp = new Particle(su->getX(iel), su->getY(iel), su->getZ(iel),
      su->getT(iel), mom.Px(), mom.Py(), mom.Pz(), mom.E(), part, 0) ;
-   // generate the same particle with y->-y, py->-py. Bad, so for test purposes only
-   Particle *pp2 = new Particle( su->getX(iel), -su->getY(iel), su->getZ(iel),
-     su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ;
-     acceptParticle(ievent,pp);
-     acceptParticle(ievent,pp2);
-   } // accepted according to the weight
+     
+	acceptParticle(ievent,pp);
+	} // accepted pp according to the weight
+     
+   //before: generate the same particle with y->-y, py->-py. Bad, so for test purposes only
+   //now: generation of the particle (with the same ip) at the symmetric droplet with with y->-y, but py2 != -py
+	if(rnd->Rndm()<=weight){
+		const double p2 = fthermal->GetRandom() ;
+		const double phi2 = 2.0*TMath::Pi()*rnd->Rndm() ;
+		const double sinth2 = -1.0 + 2.0*rnd->Rndm() ;
+		mom.SetPxPyPzE(p2*sqrt(1.0-sinth2*sinth2)*cos(phi2),
+			p2*sqrt(1.0-sinth2*sinth2)*sin(phi2), p2*sinth2, sqrt(p2*p2+mass*mass) ) ;
+		mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
+		
+		Particle *pp2 = new Particle(su->getX(iel), -su->getY(iel), su->getZ(iel),
+			su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ;
+			
+		acceptParticle(ievent,pp2);
+	} // accepted pp2 according to the weight
+	
   } // we generate a particle
   
   int nToGenClust = 0 ;
@@ -706,21 +722,37 @@ void Generator::generate(Surface *su)
    double weight = 1.0 ;
    if(part->GetBaryonNumber()==0 && part->GetStrangeness()==0)
     weight = su->getRpfl(iel) ;
+    
+	//generation of the cluster parameters
    if(rnd->Rndm()<=weight){
-   const double p = fthermal->GetRandom() ;
-   const double phi = 2.0*TMath::Pi()*rnd->Rndm() ;
-   const double sinth = -1.0 + 2.0*rnd->Rndm() ;
+   const double p = fthermal->GetRandom() ; // momentum
+   const double phi = 2.0*TMath::Pi()*rnd->Rndm() ; // azimuthal angle phi
+   const double sinth = -1.0 + 2.0*rnd->Rndm() ; // sin(theta), theta - polar angle
    mom.SetPxPyPzE(p*sqrt(1.0-sinth*sinth)*cos(phi),
      p*sqrt(1.0-sinth*sinth)*sin(phi), p*sinth, sqrt(p*p+mass*mass) ) ;
    mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
-   Particle *pp = new Particle( su->getX(iel), su->getY(iel), su->getZ(iel),
+   Particle *pp = new Particle(su->getX(iel), su->getY(iel), su->getZ(iel),
      su->getT(iel), mom.Px(), mom.Py(), mom.Pz(), mom.E(), part, 0) ;
-   // generate the same particle with y->-y, py->-py. Bad, so for test purposes only
-   Particle *pp2 = new Particle( su->getX(iel), -su->getY(iel), su->getZ(iel),
-     su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ;
+     
      acceptParticle(ievent,pp);
-     acceptParticle(ievent,pp2);
-   } // accepted according to the weight
+   } // accepted pp according to the weight
+   
+    //before: generate the same cluster with y->-y, py->-py. Bad, so for test purposes only
+   //now: generation of the cluster (with the same ip) at the symmetric droplet with with y->-y, but py2 != -py
+	if(rnd->Rndm()<=weight){
+		const double p2 = fthermal->GetRandom() ; // momentum
+		const double phi2 = 2.0*TMath::Pi()*rnd->Rndm() ;  // azimuthal angle phi
+		const double sinth2 = -1.0 + 2.0*rnd->Rndm() ; // sin(theta), theta - polar angle
+		mom.SetPxPyPzE(p2*sqrt(1.0-sinth2*sinth2)*cos(phi2),
+			p2*sqrt(1.0-sinth2*sinth2)*sin(phi2), p2*sinth2, sqrt(p2*p2+mass*mass) ) ;
+		mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
+		
+		Particle *pp2 = new Particle(su->getX(iel), -su->getY(iel), su->getZ(iel),
+			su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ;
+			
+		acceptParticle(ievent,pp2);
+	} // accepted pp2 according to the weight
+	
   } // we generate a cluster
   
   } // events loop
