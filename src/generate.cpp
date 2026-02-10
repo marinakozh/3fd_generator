@@ -667,32 +667,32 @@ void Generator::generate(Surface *su)
     
    //generation of the particle parameters
    if(rnd->Rndm()<=weight){
-   const double p = fthermal->GetRandom() ;
-   const double phi = 2.0*TMath::Pi()*rnd->Rndm() ;
-   const double sinth = -1.0 + 2.0*rnd->Rndm() ;
+   const double p = fthermal->GetRandom() ;  // momentum
+   const double phi = 2.0*TMath::Pi()*rnd->Rndm() ; // azimuthal angle phi
+   const double sinth = -1.0 + 2.0*rnd->Rndm() ; // sin(theta), theta - polar angle
    mom.SetPxPyPzE(p*sqrt(1.0-sinth*sinth)*cos(phi),
-     p*sqrt(1.0-sinth*sinth)*sin(phi), p*sinth, sqrt(p*p+mass*mass) ) ;
-   mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
+     p*sqrt(1.0-sinth*sinth)*sin(phi), p*sinth, sqrt(p*p+mass*mass) ) ; // we set the components of four-vector (of momentum and energy) for the "mother" particle mom in the frame of moving droplet
+   mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ; // four-vector (mom) boost transformation from the droplet frame to the original (center of the mass) frame. 
    Particle *pp = new Particle(su->getX(iel), su->getY(iel), su->getZ(iel),
-     su->getT(iel), mom.Px(), mom.Py(), mom.Pz(), mom.E(), part, 0) ;
+     su->getT(iel), mom.Px(), mom.Py(), mom.Pz(), mom.E(), part, 0) ; // initialization of particle pp with its parameters
      
-	acceptParticle(ievent,pp);
+	acceptParticle(ievent,pp); // in this function (see below) the particle pp is sent to the array ptls and undergoes (or does not) decay
 	} // accepted pp according to the weight
      
    //before: generate the same particle with y->-y, py->-py. Bad, so for test purposes only
    //now: generation of the particle (with the same ip) at the symmetric droplet with with y->-y, but py2 != -py
 	if(rnd->Rndm()<=weight){
-		const double p2 = fthermal->GetRandom() ;
-		const double phi2 = 2.0*TMath::Pi()*rnd->Rndm() ;
-		const double sinth2 = -1.0 + 2.0*rnd->Rndm() ;
+		const double p2 = fthermal->GetRandom() ; // momentum
+		const double phi2 = 2.0*TMath::Pi()*rnd->Rndm() ; // azimuthal angle phi
+		const double sinth2 = -1.0 + 2.0*rnd->Rndm() ; // sin(theta), theta - polar angle
 		mom.SetPxPyPzE(p2*sqrt(1.0-sinth2*sinth2)*cos(phi2),
-			p2*sqrt(1.0-sinth2*sinth2)*sin(phi2), p2*sinth2, sqrt(p2*p2+mass*mass) ) ;
-		mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ;
+			p2*sqrt(1.0-sinth2*sinth2)*sin(phi2), p2*sinth2, sqrt(p2*p2+mass*mass) ) ; // we set the components of four-vector (of momentum and energy) for the "mother" particle mom in the frame of moving droplet
+		mom.Boost(su->getVx(iel),su->getVy(iel),su->getVz(iel)) ; // four-vector (mom) boost transformation from the droplet frame to the original (center of the mass) frame. 
 		
 		Particle *pp2 = new Particle(su->getX(iel), -su->getY(iel), su->getZ(iel),
-			su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ;
+			su->getT(iel), mom.Px(), -mom.Py(), mom.Pz(), mom.E(), part, 0) ; // initialization of particle pp2 with its parameters
 			
-		acceptParticle(ievent,pp2);
+		acceptParticle(ievent,pp2); // in this function (see below) the particle pp2 is sent to the array ptls and undergoes (or does not) decay
 	} // accepted pp2 according to the weight
 	
   } // we generate a particle
